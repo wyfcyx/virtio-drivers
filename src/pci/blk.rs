@@ -52,11 +52,15 @@ impl<'a> VirtIOBlkPCI<'a> {
 
     /// Read a block.
     pub fn read_block(&mut self, block_id: usize, buf: &mut [u8]) -> Result {
+        info!("reading block {:#x}", block_id);
         assert_eq!(buf.len(), BLK_SIZE);
         let req = BlkReq::new(ReqType::In, 0, block_id as u64);
         let mut resp = BlkResp::default();
+        info!("before adding");
         self.queue.add(&[req.as_buf()], &[buf, resp.as_buf_mut()])?;
+        info!("before notifying");
         self.header.notify(0);
+        info!("after notifying");
         while !self.queue.can_pop() {
             spin_loop();
         }
