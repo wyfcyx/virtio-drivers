@@ -166,8 +166,11 @@ impl VirtIOPCIHeader {
     /// Ref: VirtIO spec v1.1 section 4.1.4.4
     fn queue_notify_address(&self) -> usize {
         let bar_idx = self.notify_cap.cap.bar.read() as usize;
-        if let Some(BAR::Memory(addr, _, _, _)) = self.bars[bar_idx] {
-            let bar_base_addr = addr as usize;
+        if let Some(bar) = self.bars[bar_idx] {
+            let bar_base_addr = match bar {
+                BAR::Memory(addr, _, _, _) => addr as usize,
+                BAR::IO(addr, _) => addr as usize,
+            };
             let cap_offset = self.notify_cap.cap.offset.read() as usize;
             let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
             let notify_off_mul = self.notify_cap.nofity_off_multiplier.read() as usize;
