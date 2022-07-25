@@ -7,6 +7,7 @@ use crate::header::VirtIOHeader;
 use crate::pci::VirtIOPCIHeader;
 use crate::hal::virt_to_phys;
 use bitflags::*;
+use log::*;
 
 use volatile::Volatile;
 
@@ -95,6 +96,8 @@ impl VirtQueue<'_> {
         let desc_table_pfn = virt_to_phys(desc.as_ptr() as *const _ as usize) / PAGE_SIZE;
         let avail_pfn = virt_to_phys(avail as *const _ as usize) / PAGE_SIZE;
         let used_pfn = virt_to_phys(used as *const _ as usize) / PAGE_SIZE;
+        info!("max_queue_size={}", header.max_queue_size());
+        info!("desc_pfn={:#x},avail_pfn={:#x},used_pfn={:#x}", desc_table_pfn, avail_pfn, used_pfn);
 
         header.queue_set(
             idx as u32,
