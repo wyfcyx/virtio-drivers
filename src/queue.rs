@@ -77,13 +77,15 @@ impl VirtQueue<'_> {
     }
 
     /// Create a new VirtQueue. Based on PCI bus.
-    pub fn new_pci(header: &mut VirtIOPCIHeader, idx: usize, size: u16) -> Result<Self> {
+    pub fn new_pci(header: &mut VirtIOPCIHeader, idx: usize) -> Result<Self> {
         if header.queue_used(idx as u32) {
             return Err(Error::AlreadyUsed);
         }
-        if !size.is_power_of_two() || header.max_queue_size() < size as u32 {
-            return Err(Error::InvalidParam);
-        }
+        // Ref virtio spec v1.1 4.1.5.1.3.1
+        // "There was no mechanism to negotiate the queue size."
+        // Therefore, we directly use common_cfg.queue_size.
+        let size = header.max_queue_size() as u16;
+        
         let layout = VirtQueueLayout::new(size);
         // alloc continuous pages
         let dma = DMA::new(layout.size / PAGE_SIZE)?;
