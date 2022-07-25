@@ -7,6 +7,7 @@ use bitflags::*;
 use volatile::{ReadOnly, Volatile};
 use crate::header::DeviceType;
 use pci::BAR;
+use log::*;
 
 /// Common Configuration, cfg_type=0x1(VIRTIO_PCI_CAP_COMMON_CFG).
 /// See VirtIO spec section 4.1.4.3
@@ -159,6 +160,15 @@ impl VirtIOPCIHeader {
         self.common_cfg.queue_desc.write(desc_table_pfn as u64);
         self.common_cfg.queue_driver.write(avail_pfn as u64);
         self.common_cfg.queue_device.write(used_pfn as u64);
+    }
+
+    /// Enable the current VirtQueue.
+    /// According the VirtIO spec 4.1.4.3.2, all other VirtQueue fields should be set up
+    /// before enabling the VirtQueue.
+    pub fn queue_enable(&mut self) {
+        info!("queue_enable={}", self.common_cfg.queue_enable.read());
+        self.common_cfg.queue_enable.write(0x1);
+        info!("queue_enable={}", self.common_cfg.queue_enable.read());
     }
 
     /// Return the notify address of the current VirtQueue.

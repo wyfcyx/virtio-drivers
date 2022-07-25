@@ -85,7 +85,7 @@ impl VirtQueue<'_> {
         // "There was no mechanism to negotiate the queue size."
         // Therefore, we directly use common_cfg.queue_size.
         let size = header.max_queue_size() as u16;
-        
+
         let layout = VirtQueueLayout::new(size);
         // alloc continuous pages
         let dma = DMA::new(layout.size / PAGE_SIZE)?;
@@ -109,6 +109,7 @@ impl VirtQueue<'_> {
             used_pfn as u64,
         );
 
+        header.queue_enable();
         // link descriptors together
         for i in 0..(size - 1) {
             desc[i as usize].next.write(i + 1);
