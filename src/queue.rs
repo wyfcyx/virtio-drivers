@@ -77,14 +77,13 @@ impl VirtQueue<'_> {
     }
 
     /// Create a new VirtQueue. Based on PCI bus.
-    pub fn new_pci(header: &mut VirtIOPCIHeader, idx: usize) -> Result<Self> {
+    pub fn new_pci(header: &mut VirtIOPCIHeader, idx: usize, size: u16) -> Result<Self> {
         if header.queue_used(idx as u32) {
             return Err(Error::AlreadyUsed);
         }
-        // Ref virtio spec v1.1 4.1.5.1.3.1
-        // "There was no mechanism to negotiate the queue size."
-        // Therefore, we directly use common_cfg.queue_size.
-        let size = header.max_queue_size() as u16;
+        if !size.is_power_of_two() || header.max_queue_size() < size as u32 {
+            return Err(Error::InvalidParam);
+        }
 
         let layout = VirtQueueLayout::new(size);
         // alloc continuous pages
@@ -95,18 +94,19 @@ impl VirtQueue<'_> {
         let avail = unsafe { &mut *((dma.vaddr() + layout.avail_offset) as *mut AvailRing) };
         let used = unsafe { &mut *((dma.vaddr() + layout.used_offset) as *mut UsedRing) };
 
-        let desc_table_pfn = virt_to_phys(desc.as_ptr() as *const _ as usize) / PAGE_SIZE;
-        let avail_pfn = virt_to_phys(avail as *const _ as usize) / PAGE_SIZE;
-        let used_pfn = virt_to_phys(used as *const _ as usize) / PAGE_SIZE;
+        // This will lead to some memory consumption. However, currently it is acceptable.
+        let desc_table_paddr = virt_to_phys(desc.as_ptr() as *const _ as usize);
+        let avail_paddr = virt_to_phys(avail as *const _ as usize);
+        let used_paddr = virt_to_phys(used as *const _ as usize);
         info!("max_queue_size={}", header.max_queue_size());
-        info!("desc_pfn={:#x},avail_pfn={:#x},used_pfn={:#x}", desc_table_pfn, avail_pfn, used_pfn);
+        info!("desc_paddr={:#x},avail_paddr={:#x},used_paddr={:#x}", desc_table_paddr, avail_paddr, used_paddr);
 
         header.queue_set(
             idx as u32,
             size as u32,
-            desc_table_pfn as u64,
-            avail_pfn as u64,
-            used_pfn as u64,
+            desc_table_paddr as u64,
+            avail_paddr as u64,
+            used_paddr as u64,
         );
 
         header.queue_enable();

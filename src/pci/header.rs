@@ -151,15 +151,13 @@ impl VirtIOPCIHeader {
     }
 
     /// Set queue.
-    pub fn queue_set(&mut self, queue: u32, _size: u32, desc_table_pfn: u64, avail_pfn: u64, used_pfn: u64) {
+    pub fn queue_set(&mut self, queue: u32, size: u32, desc_table_paddr: u64, avail_paddr: u64, used_paddr: u64) {
         self.common_cfg.queue_sel.write(queue as u16);
-        // Ref virtio spec v1.1 4.1.5.1.3.1
-        // "There was no mechanism to negotiate the queue size."
-        // Therefore, we should not do this.
-        //self.common_cfg.queue_size.write(size as u16);
-        self.common_cfg.queue_desc.write(desc_table_pfn as u64);
-        self.common_cfg.queue_driver.write(avail_pfn as u64);
-        self.common_cfg.queue_device.write(used_pfn as u64);
+        // Do not use legacy interface, thus we can negotiate the queue_size(equal to or lower than)
+        self.common_cfg.queue_size.write(size as u16);
+        self.common_cfg.queue_desc.write(desc_table_paddr as u64);
+        self.common_cfg.queue_driver.write(avail_paddr as u64);
+        self.common_cfg.queue_device.write(used_paddr as u64);
     }
 
     /// Enable the current VirtQueue.

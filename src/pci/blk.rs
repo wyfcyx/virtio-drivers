@@ -35,7 +35,7 @@ impl<'a> VirtIOBlkPCI<'a> {
             config.capacity.read() / 2
         );
 
-        let queue = VirtQueue::new_pci(&mut header, 0)?;
+        let queue = VirtQueue::new_pci(&mut header, 0, 16)?;
         header.finish_init();
 
         Ok(Self {
