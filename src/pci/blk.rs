@@ -5,6 +5,11 @@ use crate::{Result, AsBuf, Error};
 use log::*;
 use core::hint::spin_loop;
 
+/// The virtio block device is a simple virtual block device (ie. disk) which is
+/// connected to a PCI bus.
+///
+/// Read and write requests (and other exotic requests) are placed in the queue,
+/// and serviced (probably out of order) by the device except where noted.
 pub struct VirtIOBlkPCI<'a> {
     header: VirtIOPCIHeader,
     queue: VirtQueue<'a>,

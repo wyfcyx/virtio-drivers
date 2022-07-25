@@ -82,6 +82,7 @@ impl VirtIOPCIHeader {
         }
     }
 
+    /// Device type of this virtio-pci device.
     pub fn device_type(&self) -> DeviceType {
         match self.device_id {
             0x1000 => DeviceType::Network,
