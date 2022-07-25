@@ -65,6 +65,7 @@ impl<'a> VirtIOBlkPCI<'a> {
             spin_loop();
         }
         self.queue.pop_used()?;
+        info!("poped!");
         match resp.status() {
             RespStatus::Ok => Ok(()),
             _ => Err(Error::IoError),
