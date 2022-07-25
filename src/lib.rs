@@ -18,6 +18,7 @@ mod header;
 mod input;
 mod net;
 mod queue;
+mod pci;
 
 pub use self::blk::{BlkResp, RespStatus, VirtIOBlk};
 pub use self::console::VirtIOConsole;

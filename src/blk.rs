@@ -187,9 +187,9 @@ impl VirtIOBlk<'_> {
 
 #[repr(C)]
 #[derive(Debug)]
-struct BlkConfig {
+pub struct BlkConfig {
     /// Number of 512 Bytes sectors
-    capacity: Volatile<u64>,
+    pub capacity: Volatile<u64>,
     size_max: Volatile<u32>,
     seg_max: Volatile<u32>,
     cylinders: Volatile<u16>,
@@ -205,10 +205,16 @@ struct BlkConfig {
 
 #[repr(C)]
 #[derive(Debug)]
-struct BlkReq {
+pub struct BlkReq {
     type_: ReqType,
     reserved: u32,
     sector: u64,
+}
+
+impl BlkReq {
+    pub fn new(type_: ReqType, reserved: u32, sector: u64) -> Self {
+        Self { type_, reserved, sector }
+    }
 }
 
 /// Response of a VirtIOBlk request.
@@ -227,7 +233,7 @@ impl BlkResp {
 
 #[repr(u32)]
 #[derive(Debug)]
-enum ReqType {
+pub enum ReqType {
     In = 0,
     Out = 1,
     Flush = 4,
@@ -257,10 +263,10 @@ impl Default for BlkResp {
     }
 }
 
-const BLK_SIZE: usize = 512;
+pub const BLK_SIZE: usize = 512;
 
 bitflags! {
-    struct BlkFeature: u64 {
+    pub struct BlkFeature: u64 {
         /// Device supports request barriers. (legacy)
         const BARRIER       = 1 << 0;
         /// Maximum size of any single segment is in `size_max`.

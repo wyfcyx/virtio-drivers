@@ -1,7 +1,7 @@
 use super::*;
 
-type VirtAddr = usize;
-type PhysAddr = usize;
+pub type VirtAddr = usize;
+pub type PhysAddr = usize;
 
 pub struct DMA {
     paddr: u32,

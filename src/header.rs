@@ -248,7 +248,7 @@ impl VirtIOHeader {
 
 bitflags! {
     /// The device status field.
-    struct DeviceStatus: u32 {
+    pub struct DeviceStatus: u32 {
         /// Indicates that the guest OS has found the device and recognized it
         /// as a valid virtio device.
         const ACKNOWLEDGE = 1;

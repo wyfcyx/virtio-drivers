@@ -4,6 +4,8 @@ use core::sync::atomic::{fence, Ordering};
 
 use super::*;
 use crate::header::VirtIOHeader;
+use crate::pci::VirtIOPCIHeader;
+use crate::hal::virt_to_phys;
 use bitflags::*;
 
 use volatile::Volatile;
@@ -35,7 +37,7 @@ pub struct VirtQueue<'a> {
 }
 
 impl VirtQueue<'_> {
-    /// Create a new VirtQueue.
+    /// Create a new VirtQueue. Based on MMIO.
     pub fn new(header: &mut VirtIOHeader, idx: usize, size: u16) -> Result<Self> {
         if header.queue_used(idx as u32) {
             return Err(Error::AlreadyUsed);
@@ -53,6 +55,54 @@ impl VirtQueue<'_> {
             unsafe { slice::from_raw_parts_mut(dma.vaddr() as *mut Descriptor, size as usize) };
         let avail = unsafe { &mut *((dma.vaddr() + layout.avail_offset) as *mut AvailRing) };
         let used = unsafe { &mut *((dma.vaddr() + layout.used_offset) as *mut UsedRing) };
+
+        // link descriptors together
+        for i in 0..(size - 1) {
+            desc[i as usize].next.write(i + 1);
+        }
+
+        Ok(VirtQueue {
+            dma,
+            desc,
+            avail,
+            used,
+            queue_size: size,
+            queue_idx: idx as u32,
+            num_used: 0,
+            free_head: 0,
+            avail_idx: 0,
+            last_used_idx: 0,
+        })
+    }
+
+    /// Create a new VirtQueue. Based on PCI bus.
+    pub fn new_pci(header: &mut VirtIOPCIHeader, idx: usize, size: u16) -> Result<Self> {
+        if header.queue_used(idx as u32) {
+            return Err(Error::AlreadyUsed);
+        }
+        if !size.is_power_of_two() || header.max_queue_size() < size as u32 {
+            return Err(Error::InvalidParam);
+        }
+        let layout = VirtQueueLayout::new(size);
+        // alloc continuous pages
+        let dma = DMA::new(layout.size / PAGE_SIZE)?;
+
+        let desc =
+            unsafe { slice::from_raw_parts_mut(dma.vaddr() as *mut Descriptor, size as usize) };
+        let avail = unsafe { &mut *((dma.vaddr() + layout.avail_offset) as *mut AvailRing) };
+        let used = unsafe { &mut *((dma.vaddr() + layout.used_offset) as *mut UsedRing) };
+
+        let desc_table_pfn = virt_to_phys(desc.as_ptr() as *const _ as usize) / PAGE_SIZE;
+        let avail_pfn = virt_to_phys(avail as *const _ as usize) / PAGE_SIZE;
+        let used_pfn = virt_to_phys(used as *const _ as usize) / PAGE_SIZE;
+
+        header.queue_set(
+            idx as u32,
+            size as u32,
+            desc_table_pfn as u64,
+            avail_pfn as u64,
+            used_pfn as u64,
+        );
 
         // link descriptors together
         for i in 0..(size - 1) {
