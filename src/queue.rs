@@ -109,12 +109,13 @@ impl VirtQueue<'_> {
             used_paddr as u64,
         );
 
-        header.queue_enable();
         // link descriptors together
         for i in 0..(size - 1) {
             desc[i as usize].next.write(i + 1);
         }
 
+        header.queue_enable();
+        
         Ok(VirtQueue {
             dma,
             desc,
