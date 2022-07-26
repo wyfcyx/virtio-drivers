@@ -106,12 +106,16 @@ impl VirtIOPCIHeader {
     ///
     /// Ref: virtio 3.1.1 Device Initialization
     pub fn begin_init(&mut self, negotiate_features: impl FnOnce(u64) -> u64) {
-        self.common_cfg.device_status.write(DeviceStatusU8::ACKNOWLEDGE);
-        self.common_cfg.device_status.write(DeviceStatusU8::DRIVER);
+        let mut flag = DeviceStatusU8::empty();
+        flag |= DeviceStatusU8::ACKNOWLEDGE;
+        self.common_cfg.device_status.write(flag);
+        flag |= DeviceStatusU8::DRIVER;
+        self.common_cfg.device_status.write(flag);
 
         let features = self.read_device_features();
         self.write_driver_features(negotiate_features(features));
-        self.common_cfg.device_status.write(DeviceStatusU8::FEATURES_OK);
+        flag |= DeviceStatusU8::FEATURES_OK;
+        self.common_cfg.device_status.write(flag);
         let status = self.common_cfg.device_status.read();
         if !status.contains(DeviceStatusU8::FEATURES_OK) {
             panic!("virtio pci device initialization failed");
@@ -120,7 +124,8 @@ impl VirtIOPCIHeader {
 
     /// Finish initializing the device.
     pub fn finish_init(&mut self) {
-        self.common_cfg.device_status.write(DeviceStatusU8::DRIVER_OK);
+        let flag = self.common_cfg.device_status.read();
+        self.common_cfg.device_status.write(flag | DeviceStatusU8::DRIVER_OK);
     }
 
     /// Read device features.
