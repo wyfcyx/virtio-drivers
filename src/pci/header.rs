@@ -107,6 +107,8 @@ impl VirtIOPCIHeader {
     /// Ref: virtio 3.1.1 Device Initialization
     pub fn begin_init(&mut self, negotiate_features: impl FnOnce(u64) -> u64) {
         let mut flag = DeviceStatusU8::empty();
+        // reset the device
+        self.common_cfg.device_status.write(flag);
         flag |= DeviceStatusU8::ACKNOWLEDGE;
         self.common_cfg.device_status.write(flag);
         flag |= DeviceStatusU8::DRIVER;
