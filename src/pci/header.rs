@@ -179,6 +179,7 @@ impl VirtIOPCIHeader {
                 BAR::Memory(addr, _, _, _) => addr as usize,
                 BAR::IO(addr, _) => addr as usize,
             };
+            info!("bar_idx={:#x},bar_base_addr={:#x}", bar_idx, bar_base_addr);
             
             let cap_offset = self.notify_cap.cap.offset.read() as usize;
             let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
