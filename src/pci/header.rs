@@ -179,9 +179,11 @@ impl VirtIOPCIHeader {
                 BAR::Memory(addr, _, _, _) => addr as usize,
                 BAR::IO(addr, _) => addr as usize,
             };
+            
             let cap_offset = self.notify_cap.cap.offset.read() as usize;
             let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
             let notify_off_mul = self.notify_cap.nofity_off_multiplier.read() as usize;
+            info!("cap_off={:#x},notify_off={:#x},mul={:#x}", cap_offset, queue_notify_off, notify_off_mul);
             bar_base_addr + cap_offset + queue_notify_off * notify_off_mul
         } else {
             panic!("BAR {} does not exist!", bar_idx);
