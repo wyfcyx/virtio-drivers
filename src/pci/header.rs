@@ -59,8 +59,9 @@ pub struct VirtIOPCIHeader {
     device_id: u16,
     bars: [Option<BAR>; 6],
     common_cfg: &'static mut VirtIOPCICommonCfgRaw,
-    notify_cap: &'static mut VirtIOPCINotifyCapRaw,
+    notify_cap_addr: usize,
     device_cfg_addr: usize,
+    notify_off_multiplier: u32,
 }
 
 impl VirtIOPCIHeader {
@@ -73,13 +74,15 @@ impl VirtIOPCIHeader {
         common_cfg_base_addr: u64,
         notify_cap_base_addr: u64,
         device_cfg_base_addr: u64,
+        notify_off_multiplier: u32,
     ) -> Self {
         Self {
             device_id,
             bars,
             common_cfg: &mut *(common_cfg_base_addr as *mut VirtIOPCICommonCfgRaw),
-            notify_cap: &mut *(notify_cap_base_addr as *mut VirtIOPCINotifyCapRaw),
+            notify_cap_addr: notify_cap_base_addr as usize,
             device_cfg_addr: device_cfg_base_addr as usize,
+            notify_off_multiplier,
         }
     }
 
@@ -173,22 +176,10 @@ impl VirtIOPCIHeader {
     /// It can be used by the driver to notify the device.
     /// Ref: VirtIO spec v1.1 section 4.1.4.4
     fn queue_notify_address(&self) -> usize {
-        let bar_idx = self.notify_cap.cap.bar.read() as usize;
-        if let Some(bar) = self.bars[bar_idx] {
-            let bar_base_addr = match bar {
-                BAR::Memory(addr, _, _, _) => addr as usize,
-                BAR::IO(addr, _) => addr as usize,
-            };
-            info!("bar_idx={:#x},bar_base_addr={:#x}", bar_idx, bar_base_addr);
-            
-            let cap_offset = self.notify_cap.cap.offset.read() as usize;
-            let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
-            let notify_off_mul = self.notify_cap.nofity_off_multiplier.read() as usize;
-            info!("cap_off={:#x},notify_off={:#x},mul={:#x}", cap_offset, queue_notify_off, notify_off_mul);
-            bar_base_addr + cap_offset + queue_notify_off * notify_off_mul
-        } else {
-            panic!("BAR {} does not exist!", bar_idx);
-        }
+        let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
+        // self.notify_cap_addr includes bar.base_addr + cap.offset in 4.1.4.4
+        info!("queue_notify_off={:#x},notify_off_multiplier={:#x}", queue_notify_off, self.notify_off_multiplier);
+        self.notify_cap_addr + queue_notify_off * self.notify_off_multiplier as usize
     }
 
     /// Notify the device that a new request has been submitted.
