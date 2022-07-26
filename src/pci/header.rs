@@ -185,10 +185,10 @@ impl VirtIOPCIHeader {
     /// Notify the device that a new request has been submitted.
     /// Assuming that VIRTIO_F_NOTIFICATION_DATA has not been negotiated.
     /// Ref: VirtIO spec v1.1 section 4.1.5.2
-    pub fn notify(&mut self, queue_idx: u32) {
+    pub fn notify(&mut self, queue_idx: u16) {
         // Safety: The implementation of `queue_notify_address` needs to be correct.
         unsafe {
-            (self.queue_notify_address() as *mut u32).write_volatile(queue_idx);
+            (self.queue_notify_address() as *mut u16).write_volatile(queue_idx);
         }
     }
 
