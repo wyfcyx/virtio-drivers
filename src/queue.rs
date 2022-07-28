@@ -273,7 +273,7 @@ struct Descriptor {
 impl Descriptor {
     fn set_buf(&mut self, buf: &[u8]) {
         self.addr.write(virt_to_phys(buf.as_ptr() as usize) as u64);
-        info!("set_buf addr={:#x} len={:#x}", self.addr.read(), buf.len());
+        info!("set_buf va={:#x}, pa={:#x} len={:#x}", buf.as_ptr() as usize, self.addr.read(), buf.len());
         self.len.write(buf.len() as u32);
     }
 }
