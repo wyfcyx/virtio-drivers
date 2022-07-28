@@ -174,9 +174,9 @@ impl VirtIOPCIHeader {
     /// According the VirtIO spec 4.1.4.3.2, all other VirtQueue fields should be set up
     /// before enabling the VirtQueue.
     pub fn queue_enable(&mut self) {
-        info!("queue_enable={}", self.common_cfg.queue_enable.read());
+        //info!("queue_enable={}", self.common_cfg.queue_enable.read());
         self.common_cfg.queue_enable.write(0x1);
-        info!("queue_enable={}", self.common_cfg.queue_enable.read());
+        //info!("queue_enable={}", self.common_cfg.queue_enable.read());
     }
 
     /// Return the notify address of the current VirtQueue.
@@ -185,7 +185,7 @@ impl VirtIOPCIHeader {
     fn queue_notify_address(&self) -> usize {
         let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
         // self.notify_cap_addr includes bar.base_addr + cap.offset in 4.1.4.4
-        info!("queue_notify_off={:#x},notify_off_multiplier={:#x}", queue_notify_off, self.notify_off_multiplier);
+        //info!("queue_notify_off={:#x},notify_off_multiplier={:#x}", queue_notify_off, self.notify_off_multiplier);
         self.notify_cap_addr + queue_notify_off * self.notify_off_multiplier as usize
     }
 
