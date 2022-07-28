@@ -99,6 +99,7 @@ impl VirtQueue<'_> {
         let avail_paddr = virt_to_phys(avail as *const _ as usize);
         let used_paddr = virt_to_phys(used as *const _ as usize);
         //info!("max_queue_size={}", header.max_queue_size());
+        info!("desc_vaddr={:p},avail_vaddr={:p},used_vaddr={:p}", desc as *const _, avail as *const _, used as *const _);
         info!("desc_paddr={:#x},avail_paddr={:#x},used_paddr={:#x}", desc_table_paddr, avail_paddr, used_paddr);
 
         header.queue_set(
