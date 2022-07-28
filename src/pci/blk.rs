@@ -23,7 +23,8 @@ impl<'a> VirtIOBlkPCI<'a> {
             let features = BlkFeature::from_bits_truncate(features);
             info!("device features: {:?}", features);
             // negotiate these flags only
-            let supported_features = BlkFeature::empty();
+            // do not use legacy interface, see virtio spec 2.2.3
+            let supported_features = BlkFeature::VERSION_1;
             (features & supported_features).bits()
         });
 
