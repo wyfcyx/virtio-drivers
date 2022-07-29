@@ -185,7 +185,7 @@ impl VirtIOPCIHeader {
     fn queue_notify_address(&self) -> usize {
         let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
         // self.notify_cap_addr includes bar.base_addr + cap.offset in 4.1.4.4
-        info!("queue_notify_off={:#x},notify_off_multiplier={:#x}", queue_notify_off, self.notify_off_multiplier);
+        //info!("queue_notify_off={:#x},notify_off_multiplier={:#x}", queue_notify_off, self.notify_off_multiplier);
         self.notify_cap_addr + queue_notify_off * self.notify_off_multiplier as usize
     }
 
@@ -193,7 +193,6 @@ impl VirtIOPCIHeader {
     /// Assuming that VIRTIO_F_NOTIFICATION_DATA has not been negotiated.
     /// Ref: VirtIO spec v1.1 section 4.1.5.2
     pub fn notify(&mut self, queue_idx: u16) {
-        info!("before really notifying, qna={:#x}", self.queue_notify_address());
         // Safety: The implementation of `queue_notify_address` needs to be correct.
         unsafe {
             (self.queue_notify_address() as *mut u16).write_volatile(queue_idx);
