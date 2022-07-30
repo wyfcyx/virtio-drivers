@@ -60,9 +60,9 @@ impl<'a> VirtIOBlkPCI<'a> {
         let mut resp = BlkResp::default();
         //info!("before adding");
         self.queue.add(&[req.as_buf()], &[buf, resp.as_buf_mut()])?;
-        //info!("before notifying");
+        info!("before notifying");
         self.header.notify(0);
-        //info!("after notifying");
+        info!("after notifying");
         while !self.queue.can_pop() {
             spin_loop();
         }
