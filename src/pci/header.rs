@@ -183,7 +183,8 @@ impl VirtIOPCIHeader {
     /// It can be used by the driver to notify the device.
     /// Ref: VirtIO spec v1.1 section 4.1.4.4
     fn queue_notify_address(&self) -> usize {
-        let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
+        //let queue_notify_off = self.common_cfg.queue_notify_off.read() as usize;
+        let queue_notify_off = 0usize;
         // self.notify_cap_addr includes bar.base_addr + cap.offset in 4.1.4.4
         //info!("queue_notify_off={:#x},notify_off_multiplier={:#x}", queue_notify_off, self.notify_off_multiplier);
         self.notify_cap_addr + queue_notify_off * self.notify_off_multiplier as usize
